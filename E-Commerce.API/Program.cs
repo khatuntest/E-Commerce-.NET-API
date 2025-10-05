@@ -1,7 +1,12 @@
 
+using E_Commerce.API.Filters;
+using E_Commerce.API.Filters;
+using E_Commerce.API.Middleware;
 using E_Commerce.Domain.Contracts;
 using E_Commerce.Infrastructure;
 using E_Commerce.Infrastructure.DataSeed;
+using E_Commerce.Services.Interfaces;
+using E_Commerce.Services.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace E_Commerce.API
@@ -33,7 +38,17 @@ namespace E_Commerce.API
             builder.Services.AddScoped(typeof(IUnitOfWork) , typeof(UnitOfWork));
 
             builder.Services.AddAutoMapper(typeof(MappingProfiles));
-        
+
+            builder.Services.AddScoped<IProductService, ProductService>();
+
+            builder.Services.AddLogging(options =>
+            {
+                options.AddDebug();
+            });
+
+            builder.Services.AddScoped<ValidationFilter>();
+
+
             var app = builder.Build();
 
             using var scope = app.Services.CreateScope();
@@ -60,6 +75,9 @@ namespace E_Commerce.API
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
+
+            app.UseMiddleware<ExceptionMiddleware>();
 
             app.UseHttpsRedirection();
 
