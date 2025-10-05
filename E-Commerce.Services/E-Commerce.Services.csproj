@@ -7,4 +7,14 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build.Framework" Version="17.14.8" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\E-Commerce.Domain\E-Commerce.Domain.csproj" />
+    <ProjectReference Include="..\E-Commerce.Infrastructure\E-Commerce.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>

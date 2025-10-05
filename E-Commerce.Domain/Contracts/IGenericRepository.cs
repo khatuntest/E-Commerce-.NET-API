@@ -14,5 +14,6 @@ namespace E_Commerce.Domain.Contracts
         public Task Add(T element);
         public Task Update(T element);
         public Task Delete(T element);
+       
     }
 }
