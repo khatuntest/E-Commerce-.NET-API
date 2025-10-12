@@ -1,5 +1,7 @@
 ﻿using E_Commerce.Domain.Contracts;
 using E_Commerce.Domain.Entities;
+using E_Commerce.Domain.Specifications;
+using E_Commerce.Infrastructure.Utilities;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -11,78 +13,47 @@ namespace E_Commerce.Infrastructure.Repositories
 {
     public class GenericRepository<T> : IGenericRepository<T> where T : BaseClass
     {
-        private readonly ECommerceContext _CommerceContext;
+        private readonly ECommerceContext CommerceContext;
 
-        public GenericRepository(ECommerceContext commerceContext) 
+        public GenericRepository(ECommerceContext _commerceContext) 
         {
-            _CommerceContext = commerceContext;
+            CommerceContext = _commerceContext;
         }
 
-        public async Task<T?> GetAsync(int Id)
-        {
-            if(typeof(T) == typeof(Product))
-            return await  _CommerceContext.Set<Product>()
-                    .Include(p => p.ProductBrand)
-                    .Include(p => p.ProductType)
-                    .Where(p =>  p.Id == Id).FirstOrDefaultAsync() as T;
+        public async Task<T?> GetAsync(ISpecifications<T> spc)
+         => await ApplySpecification(spc).FirstOrDefaultAsync();
+        
 
-            if (typeof(T) == typeof(Brand))
-                return await _CommerceContext.Set<Brand>()
-                        .Include(b => b.Products)
-                        .ThenInclude(p => p.ProductType)
-                        .Where(p => p.Id == Id).FirstOrDefaultAsync() as T;
+        public async Task<IEnumerable<T?>> GetAllAsync(ISpecifications<T> spc)
+            =>  await ApplySpecification(spc).ToListAsync();
 
-            if (typeof(T) == typeof(Types))
-                return await _CommerceContext.Set<Types>()
-                    .Include(t => t.Products)
-                    .ThenInclude(p => p.ProductBrand)
-                    .Where(p => p.Id == Id).FirstOrDefaultAsync() as T;
 
-            return await _CommerceContext.Set<T>().FindAsync(Id);
-        }
+        public async Task<IEnumerable<T?>> GetAllAsyncWithFilter(ISpecifications<T> spc)
+            => await ApplySpecification(spc).ToListAsync();
 
-        public async Task<IEnumerable<T>> GetAllAsync()
-        {
-            if (typeof(T) == typeof(Product))
-                return (IEnumerable<T>) await _CommerceContext
-                    .Set<Product>()
-                    .Include(p => p.ProductBrand)
-                    .Include(p => p.ProductType)
-                    .ToListAsync();
 
-            if (typeof(T) == typeof(Brand))
-                return (IEnumerable<T>)await _CommerceContext
-                    .Set<Brand>()
-                     .Include(b => b.Products)
-                     .ThenInclude(p => p.ProductType)
-                    .ToListAsync();
-
-            if (typeof(T) == typeof(Types))
-                return (IEnumerable<T>)await _CommerceContext
-                    .Set<Types>()
-                    .Include(t => t.Products)
-                    .ThenInclude(p => p.ProductBrand)
-                    .ToListAsync();
-
-            return await _CommerceContext.Set<T>().ToListAsync();
-        }
         public async Task Add(T element)
         {
-            await _CommerceContext.AddAsync(element);
-            await _CommerceContext.SaveChangesAsync();
+            await CommerceContext.AddAsync(element);
+            await CommerceContext.SaveChangesAsync();
 
         }
 
         public async Task Update(T element)
         {
-             _CommerceContext.Update(element);
-            await _CommerceContext.SaveChangesAsync();
+             CommerceContext.Update(element);
+            await CommerceContext.SaveChangesAsync();
         }
 
         public async Task Delete(T element)
         {
-            _CommerceContext.Remove(element);
-            await _CommerceContext.SaveChangesAsync();
+            CommerceContext.Remove(element);
+            await CommerceContext.SaveChangesAsync();
         }
+
+        private IQueryable<T> ApplySpecification(ISpecifications<T> spc)
+            => SpecificationEvaluated<T>.GetQuery(CommerceContext.Set<T>(), spc);
+
+   
     }
 }

@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace E_Commerce.Infrastructure
+namespace E_Commerce.Infrastructure.Utilities
 {
     public class ECommerceContext : DbContext
     {

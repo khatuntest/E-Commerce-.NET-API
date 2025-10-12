@@ -1,11 +1,11 @@
 
-using E_Commerce.API.Filters;
+using Amazon.API.Middleware;
 using E_Commerce.API.Filters;
 using E_Commerce.API.Middleware;
+using E_Commerce.API.Profiles;
 using E_Commerce.Domain.Contracts;
-using E_Commerce.Infrastructure;
 using E_Commerce.Infrastructure.DataSeed;
-using E_Commerce.Services.Interfaces;
+using E_Commerce.Infrastructure.Utilities;
 using E_Commerce.Services.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -78,11 +78,13 @@ namespace E_Commerce.API
 
 
             app.UseMiddleware<ExceptionMiddleware>();
+            app.UseMiddleware<ProfilingMiddleware>();
 
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
 
+            app.UseStaticFiles();
 
             app.MapControllers();
 

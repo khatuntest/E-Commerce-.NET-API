@@ -2,6 +2,7 @@
 using E_Commerce.API.Dtos;
 using E_Commerce.Domain.Contracts;
 using E_Commerce.Domain.Entities;
+using E_Commerce.Domain.Specifications;
 using E_Commerce.Infrastructure;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,38 +11,84 @@ namespace E_Commerce.API.Controllers
 {
     public class TypeController : BaseController
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
+        private readonly IUnitOfWork unitOfWork;
+        private readonly IMapper mapper;
+        private readonly ILogger<TypeController> logger;
 
-        public TypeController(IUnitOfWork unitOfWork , IMapper mapper)
+        public TypeController(IUnitOfWork _unitOfWork , IMapper _mapper , ILogger<TypeController> _logger)
         {
-            _unitOfWork = unitOfWork;
-            _mapper = mapper;
+            unitOfWork = _unitOfWork;
+            mapper = _mapper;
+            logger = _logger;
         }
 
         [HttpGet("{Id}")]
         public async Task<ActionResult<TypeToReturnDto>> GetTypeById(int Id)
         {
-            var typeRepo = _unitOfWork.Repository<Types>();
-            var type = typeRepo.GetAsync(Id);
-            return Ok(_mapper.Map<Types , TypeToReturnDto>(await type));
+            try
+            {
+                var TypeRepo = unitOfWork.Repository<Types>();
+                var spc = new BaseSpecification<Types>(t => t.Id == Id); 
+                var type =await TypeRepo.GetAsync(spc);
+                if (type == null)
+                {
+                    logger.LogWarning($"Type with Id: {Id} Not Found");
+                    return NotFound("No Type found");
+                }
+                var mapType = mapper.Map<TypeToReturnDto>(type);
+                return Ok(mapType);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Error while fetching Type with Id {Id}");
+                return StatusCode(500, " Internal Server Error");
+            }
         }
 
         [HttpGet]
         public async Task<ActionResult<TypeToReturnDto>> GetAllTypes()
         {
-            var typeRepo = _unitOfWork.Repository<Types>();
-            var types = typeRepo.GetAllAsync();
-            return Ok(_mapper.Map<IEnumerable<Types> , IEnumerable<TypeToReturnDto>>(await types));
+            try
+            {
+                var typeRepo = unitOfWork.Repository<Types>();
+                var spc = new BaseSpecification<Types>();
+                var types = await typeRepo.GetAllAsync(spc);
+                if (types == null || !types.Any())
+                {
+                    logger.LogWarning("No Types found in database");
+                    return NotFound("No Types found");
+                }
+                var mapTypes = mapper.Map<IEnumerable<TypeToReturnDto>>(types);
+                return Ok(mapTypes);
+            }
+            catch(Exception ex)
+            {
+                logger.LogError(ex , $"Error while fetching Types from Database ");
+                return StatusCode(500, " Internal Server Error");
+            }
         }
 
-        [HttpGet("{Id}/products")]
+        [HttpGet("{Id}/Products")]
         public async Task<ActionResult<TypeToReturnDto>> GetProductsByTypeId(int Id)
         {
-            var typeRepo = _unitOfWork.Repository<Types>();
-            var type = await typeRepo.GetAsync(Id);
-            var Products = _mapper.Map<IEnumerable<Product> ,IEnumerable<ProductToReturnDto>>(type.Products);
-            return Ok(Products);
+            try
+            {
+                var typeRepo = unitOfWork.Repository<Types>();
+                var spc = new BaseSpecification<Types>(t => t.Id == Id);
+                var type = await typeRepo.GetAsync(spc);
+                if (type == null)
+                {
+                    logger.LogWarning($"Type with Id: {Id} Not Found");
+                    return NotFound("No Type found");
+                }
+                var Products = mapper.Map<IEnumerable<ProductToReturnDto>>(type.Products);
+                return Ok(Products);
+            }
+            catch(Exception ex)
+            {
+                logger.LogError(ex, $"Error while fetching Products from Database ");
+                return StatusCode(500, " Internal Server Error");
+            }
         }
     }
 }

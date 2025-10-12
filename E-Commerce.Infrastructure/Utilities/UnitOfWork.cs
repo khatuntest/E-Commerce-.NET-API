@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace E_Commerce.Infrastructure
+namespace E_Commerce.Infrastructure.Utilities
 {
     public class UnitOfWork : IUnitOfWork, IDisposable
     {

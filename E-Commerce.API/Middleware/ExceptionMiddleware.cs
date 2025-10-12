@@ -18,7 +18,7 @@ namespace E_Commerce.API.Middleware
             try
             {
                await _next(context);
-                Console.WriteLine($"NO Exception with Request {context.User?.Identity?.Name ?? "MennaTest"}");
+               Console.WriteLine("Request completed successfully");
             }
             catch (Exception e)
             {
@@ -27,7 +27,7 @@ namespace E_Commerce.API.Middleware
 
                 var Result = new {
                     StatusCodes = (int)HttpStatusCode.InternalServerError,
-                    Message = "There is an error in this request plz Try again"
+                    Message = "There is an error in this request , Please Try again"
                 };
 
                 await context.Response.WriteAsJsonAsync(Result);
